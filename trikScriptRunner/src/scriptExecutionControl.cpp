@@ -24,6 +24,14 @@
 
 using namespace trikScriptRunner;
 
+ScriptExecutionControl::ScriptExecutionControl()
+{
+	qDebug() << "Initialized ScriptExecutionControl, thread:" << thread();
+	QObject::connect(this, SIGNAL(stopWaiting()), &mWaitingLoop, SLOT(quit()), Qt::QueuedConnection);
+	connect(&mWaitingTimer, SIGNAL(timeout()), &mWaitingLoop, SLOT(quit()), Qt::QueuedConnection);
+	mWaitingTimer.setSingleShot(true);
+}
+
 ScriptExecutionControl::~ScriptExecutionControl()
 {
 	qDeleteAll(mTimers);
@@ -31,6 +39,8 @@ ScriptExecutionControl::~ScriptExecutionControl()
 
 void ScriptExecutionControl::reset()
 {
+	qDebug() << "reset, thread" << thread();
+
 	mInEventDrivenMode = false;
 	emit stopWaiting();
 	for (QTimer * const timer : mTimers) {
@@ -51,12 +61,10 @@ QTimer* ScriptExecutionControl::timer(int milliseconds)
 
 void ScriptExecutionControl::wait(const int &milliseconds)
 {
-	QEventLoop loop;
-	QObject::connect(this, SIGNAL(stopWaiting()), &loop, SLOT(quit()), Qt::DirectConnection);
-	QTimer t;
-	connect(&t, SIGNAL(timeout()), &loop, SLOT(quit()), Qt::DirectConnection);
-	t.start(milliseconds);
-	loop.exec();
+	qDebug() << "start, thread:" << thread();
+	mWaitingTimer.start(milliseconds);
+	mWaitingLoop.exec();
+	qDebug() << "stop";
 }
 
 qint64 ScriptExecutionControl::time() const

@@ -17,6 +17,7 @@
 #include <QtCore/QList>
 #include <QtCore/QTimer>
 #include <QtCore/QStringList>
+#include <QtCore/QEventLoop>
 
 namespace trikScriptRunner {
 
@@ -26,6 +27,8 @@ class ScriptExecutionControl : public QObject
 	Q_OBJECT
 
 public:
+	ScriptExecutionControl();
+
 	~ScriptExecutionControl() override;
 
 	/// Returns true if a script is in event-driven running mode, so it shall wait for events when script is executed.
@@ -82,6 +85,9 @@ private:
 	/// True, if a system is in event-driven running mode, so it shall wait for events when script is executed.
 	/// If it is false, script will exit immediately.
 	bool mInEventDrivenMode = false;
+
+	QEventLoop mWaitingLoop;
+	QTimer mWaitingTimer;
 };
 
 }
