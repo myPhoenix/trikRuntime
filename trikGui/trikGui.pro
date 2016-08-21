@@ -49,6 +49,7 @@ HEADERS += \
 	$$PWD/wiFiModeWidget.h \
 	$$PWD/wiFiIndicator.h \
 	$$PWD/openSocketIndicator.h \
+    accelerometerWidget.h
 
 SOURCES += \
 	$$PWD/autoRunner.cpp \
@@ -83,6 +84,7 @@ SOURCES += \
 	$$PWD/wiFiModeWidget.cpp \
 	$$PWD/wiFiIndicator.cpp \
 	$$PWD/openSocketIndicator.cpp \
+    accelerometerWidget.cpp
 
 TRANSLATIONS = \
 	$$PWD/../translations/ru/trikGui_ru.ts \

@@ -35,6 +35,7 @@
 #include "informationWidget.h"
 #include "systemSettingsWidget.h"
 #include "languageSelectionWidget.h"
+#include "accelerometerWidget.h"
 
 using namespace trikGui;
 
@@ -61,6 +62,8 @@ StartWidget::StartWidget(Controller &controller, QWidget *parent)
 
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::servoMotor)));
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::powerMotor)));
+	testingItem->appendRow(new QStandardItem(tr("Gyroscope")));
+	testingItem->appendRow(new QStandardItem(tr("Accelerometer")));
 
 	testingItem->appendRow(new QStandardItem(
 			SensorsSelectionWidget::menuEntry(SensorsSelectionWidget::SensorType::digitalSensor)));
@@ -181,6 +184,10 @@ void StartWidget::launch()
 			LanguageSelectionWidget languageSelectionWidget;
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
+		} else if (currentItemText == "Accelerometer") {
+			AccelerometerWidget accelerometerWidget(mController.brick());
+			emit newWidget(accelerometerWidget);
+			accelerometerWidget.exec();
 		}
 
 		if (result == TrikGuiDialog::goHomeExit) {
