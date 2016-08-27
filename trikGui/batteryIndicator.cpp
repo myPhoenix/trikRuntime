@@ -15,12 +15,14 @@
 #include "batteryIndicator.h"
 
 #include <QtCore/QString>
+#include <QtCore/QProcess>
 
 using namespace trikGui;
 
 BatteryIndicator::BatteryIndicator(trikControl::BrickInterface &brick, QWidget *parent)
 	: QLabel(parent)
 	, mBrick(brick)
+	, mCurrentLevel(PowerLevel::currentLevel())
 {
 	renew();
 
@@ -33,6 +35,23 @@ BatteryIndicator::BatteryIndicator(trikControl::BrickInterface &brick, QWidget *
 void BatteryIndicator::renew()
 {
 	if (mBrick.battery()->status() == trikControl::DeviceInterface::Status::ready) {
-		setText(QString::number(mBrick.battery()->readVoltage(), 'f', 1) + " V");
+		const auto voltage = mBrick.battery()->readVoltage();
+		if (voltage > mSanityThreshold && voltage < shutdownThreshold()) {
+			QProcess::startDetached("/bin/sh", {"-c", "halt"});
+		} else if (voltage > mSanityThreshold && voltage < warningThreshold()) {
+			mBrick.playTone(800, mRenewInterval / 2);
+		}
+
+		setText(QString::number(voltage, 'f', 1) + " V");
 	}
+}
+
+float BatteryIndicator::warningThreshold() const
+{
+	return mCurrentLevel == PowerLevel::Level::twelveVolt ? m12VWarningThreshold : m6VWarningThreshold;
+}
+
+float BatteryIndicator::shutdownThreshold() const
+{
+	return mCurrentLevel == PowerLevel::Level::twelveVolt ? m12VShutdownThreshold : m6VShutdownThreshold;
 }

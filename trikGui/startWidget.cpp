@@ -36,6 +36,7 @@
 #include "systemSettingsWidget.h"
 #include "languageSelectionWidget.h"
 #include "accelerometerWidget.h"
+#include "programmingWidget.h"
 
 using namespace trikGui;
 
@@ -50,6 +51,7 @@ StartWidget::StartWidget(Controller &controller, QWidget *parent)
 	mTitleLabel.setText(tr("TRIK"));
 
 	mMenuModel.appendRow(new QStandardItem(FileManagerWidget::menuEntry()));
+	mMenuModel.appendRow(new QStandardItem(ProgrammingWidget::menuEntry()));
 
 	QStandardItem * const settingsItem = new QStandardItem(tr("Settings"));
 	mMenuModel.appendRow(settingsItem);
@@ -129,6 +131,10 @@ void StartWidget::launch()
 			WiFiModeWidget wiFiModeWidget(mController.wiFi());
 			emit newWidget(wiFiModeWidget);
 			result = wiFiModeWidget.exec();
+		} else if (currentItemText == ProgrammingWidget::menuEntry()) {
+			ProgrammingWidget programmingWidget(mController);
+			emit newWidget(programmingWidget);
+			result = programmingWidget.exec();
 		} else if (currentItemText == MotorsWidget::menuEntry(MotorInterface::Type::powerMotor)) {
 			MotorsWidget motorsWidget(mController.brick(), MotorInterface::Type::powerMotor);
 			emit newWidget(motorsWidget);

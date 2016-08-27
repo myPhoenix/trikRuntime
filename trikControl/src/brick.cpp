@@ -44,6 +44,7 @@
 #include "rangeSensor.h"
 #include "servoMotor.h"
 #include "soundSensor.h"
+#include "tonePlayer.h"
 #include "vectorSensor.h"
 
 #include "mspBusAutoDetector.h"
@@ -71,6 +72,7 @@ Brick::Brick(const trikKernel::DifferentOwnerPointer<trikHal::HardwareAbstractio
 		, const QString &modelConfig
 		, const QString &mediaPath)
 	: mHardwareAbstraction(hardwareAbstraction)
+	, mTonePlayer(new TonePlayer())
 	, mMediaPath(mediaPath)
 	, mConfigurer(systemConfig, modelConfig)
 {
@@ -204,6 +206,18 @@ void Brick::playSound(const QString &soundFileName)
 	}
 }
 
+
+void Brick::playTone(int hzFreq, int msDuration)
+{
+	QLOG_INFO() << "Playing tone (" << hzFreq << "," << msDuration << ")";
+
+	if (hzFreq < 0 || msDuration < 0)
+		return;
+	// mHardwareAbstraction->systemSound()->playTone(hzFreq, msDuration);
+	// mTonePlayer->play(hzFreq, msDuration);
+	QMetaObject::invokeMethod(mTonePlayer.data(), "play", Q_ARG(int, hzFreq), Q_ARG(int, msDuration));
+}
+
 void Brick::say(const QString &text)
 {
 	QStringList args{"-c", "espeak -v russian_test -s 100 \"" + text + "\""};
@@ -213,6 +227,8 @@ void Brick::say(const QString &text)
 void Brick::stop()
 {
 	QLOG_INFO() << "Stopping brick";
+
+	mTonePlayer->stop();
 
 	for (ServoMotor * const servoMotor : mServoMotors.values()) {
 		servoMotor->powerOff();

@@ -1,4 +1,4 @@
-# Copyright 2013 Yurii Litvinov
+# Copyright 2013 - 2016 Yurii Litvinov, Mikhail Kita, Anna Kudryashova
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,7 +49,15 @@ HEADERS += \
 	$$PWD/wiFiModeWidget.h \
 	$$PWD/wiFiIndicator.h \
 	$$PWD/openSocketIndicator.h \
-    accelerometerWidget.h
+	$$PWD/accelerometerWidget.h \
+	$$PWD/commandSettingsWidget.h \
+	$$PWD/commandsListWidget.h \
+	$$PWD/programmingWidget.h \
+	$$PWD/sensorSettingsWidget.h \
+	$$PWD/sensorLever.h \
+	$$PWD/scriptHolder.h \
+	$$PWD/gamepadIndicator.h \
+	$$PWD/powerLevel.h \
 
 SOURCES += \
 	$$PWD/autoRunner.cpp \
@@ -84,7 +92,15 @@ SOURCES += \
 	$$PWD/wiFiModeWidget.cpp \
 	$$PWD/wiFiIndicator.cpp \
 	$$PWD/openSocketIndicator.cpp \
-    accelerometerWidget.cpp
+	$$PWD/accelerometerWidget.cpp \
+	$$PWD/commandSettingsWidget.cpp \
+	$$PWD/commandsListWidget.cpp \
+	$$PWD/programmingWidget.cpp \
+	$$PWD/sensorSettingsWidget.cpp \
+	$$PWD/sensorLever.cpp \
+	$$PWD/scriptHolder.cpp \
+	$$PWD/gamepadIndicator.cpp \
+	$$PWD/$$PLATFORM/powerLevel.cpp \
 
 TRANSLATIONS = \
 	$$PWD/../translations/ru/trikGui_ru.ts \

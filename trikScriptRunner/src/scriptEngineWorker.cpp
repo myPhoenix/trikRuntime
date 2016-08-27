@@ -20,6 +20,7 @@
 
 #include <trikKernel/fileUtils.h>
 #include <trikKernel/paths.h>
+#include <trikKernel/timeVal.h>
 #include <trikControl/batteryInterface.h>
 #include <trikControl/colorSensorInterface.h>
 #include <trikControl/displayInterface.h>
@@ -65,6 +66,7 @@ Q_DECLARE_METATYPE(SensorInterface*)
 Q_DECLARE_METATYPE(Threading*)
 Q_DECLARE_METATYPE(VectorSensorInterface*)
 Q_DECLARE_METATYPE(QVector<int>)
+Q_DECLARE_METATYPE(trikKernel::TimeVal)
 Q_DECLARE_METATYPE(QTimer*)
 
 QScriptValue print(QScriptContext *context, QScriptEngine *engine)
@@ -79,7 +81,7 @@ QScriptValue print(QScriptContext *context, QScriptEngine *engine)
 	}
 
 	QTextStream(stdout) << result << "\n";
-	engine->evaluate(QString("script.sendMessage(\"%1\");").arg(result));
+	engine->evaluate(QString("script.sendMessage(\"print: %1\");").arg(result));
 
 	return engine->toScriptValue(result);
 }
@@ -200,6 +202,8 @@ void ScriptEngineWorker::doRun(const QString &script)
 
 void ScriptEngineWorker::runDirect(const QString &command, int scriptId)
 {
+	qDebug() << "ScriptEngineWorker::runDirect";
+
 	QMutexLocker locker(&mScriptStateMutex);
 	if (!mScriptControl.isInEventDrivenMode()) {
 		QLOG_INFO() << "ScriptEngineWorker: starting interpretation";
@@ -253,6 +257,18 @@ void ScriptEngineWorker::onScriptRequestingToQuit()
 	stopScript();
 }
 
+static QScriptValue timeValToScriptValue(QScriptEngine *engine, const trikKernel::TimeVal &in)
+{
+	QScriptValue obj = engine->newObject();
+	obj.setProperty("mcsec", in.toMcSec());
+	return obj;
+}
+
+static void timeValFromScriptValue(const QScriptValue &object, trikKernel::TimeVal &out)
+{
+	out = trikKernel::TimeVal(0, object.property("mcsec").toInt32());
+}
+
 QScriptEngine * ScriptEngineWorker::createScriptEngine(bool supportThreads)
 {
 	QScriptEngine *engine = new QScriptEngine();
@@ -276,6 +292,7 @@ QScriptEngine * ScriptEngineWorker::createScriptEngine(bool supportThreads)
 	Scriptable<SensorInterface>::registerMetatype(engine);
 	Scriptable<SoundSensorInterface>::registerMetatype(engine);
 	Scriptable<QTimer>::registerMetatype(engine);
+	qScriptRegisterMetaType(engine, timeValToScriptValue, timeValFromScriptValue);
 	Scriptable<VectorSensorInterface>::registerMetatype(engine);
 
 	qScriptRegisterSequenceMetaType<QVector<int>>(engine);
