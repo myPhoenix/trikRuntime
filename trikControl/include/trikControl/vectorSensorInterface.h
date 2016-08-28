@@ -31,6 +31,11 @@ namespace trikControl {
 class TRIKCONTROL_EXPORT VectorSensorInterface : public QObject, public DeviceInterface
 {
 	Q_OBJECT
+public:
+	enum class Type {
+		accelerometer
+		, gyroscope
+	};
 
 signals:
 	/// Emitted when new sensor reading is ready.

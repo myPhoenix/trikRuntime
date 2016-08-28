@@ -12,56 +12,221 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. */
 
-#include "accelerometerWidget.h"
+#include "vectorSensorWidget.h"
 
 #include <trikControl/brickInterface.h>
-#include <trikControl/vectorSensorInterface.h>
+#include <QTime>
 
 using namespace trikGui;
 
 VectorSensorWidget::VectorSensorWidget(trikControl::BrickInterface &brick
-		, QWidget *parent)
+	, trikControl::VectorSensorInterface &sensor
+	, QWidget *parent)
 	: TrikGuiDialog(parent)
 	, mBrick(brick)
+	, mSensor(sensor)
 	, mInterval(500)
+	, mTime(0)
+	, maxTime(10)
+	, axisMargin(5)
 {
+	//this->setFixedSize(width(), height());
+
+	QTime now = QTime::currentTime();
+	qsrand(now.msec());
+
 	mTimer.setInterval(mInterval);
-	connect(&mTimer, SIGNAL(timeout()), this, SLOT(renew()));
-
-	int i = 0;
-	for (i = 0; i < 3; i++)
-	{
-		QLabel *newLabel = new QLabel();
-		newLabel->setAlignment(Qt::AlignCenter);
-		mValueLabels.append(newLabel);
-		mValues.append(0);
-		mLayout.addWidget(mValueLabels[i]);
-	}
-
-	setLayout(&mLayout);
+	connect(&mTimer, SIGNAL(timeout()), this, SLOT(update()));
 
 	mTimer.start();
 }
 
-void VectorSensorWidget::renew()
+
+QString VectorSensorWidget::menuEntry(trikControl::VectorSensorInterface::Type type)
 {
-	generateRandomNumbers();
-	for (int i = 0; i < mValueLabels.size(); i++)
-	{
-		mValueLabels[i]->setText(QString::number(mValues[i]));
+	switch (type) {
+		case trikControl::VectorSensorInterface::Type::accelerometer: {
+			return tr("Accelerometer");
+		}
+		case trikControl::VectorSensorInterface::Type::gyroscope: {
+			return tr("Gyroscope");
+		}
 	}
+
+	return QString();
 }
 
-void VectorSensorWidget::generateRandomNumbers()
+void VectorSensorWidget::paintEvent(QPaintEvent *)
 {
-	const int maxValue = 5000;
-	for (int i = 0; i < mValues.size(); i++)
-	{
-		mValues[i] = rand() % maxValue;
-	}
+	QPen bluePen(Qt::blue, 2, Qt::SolidLine);
+	QPen redPen(Qt::red, 2, Qt::SolidLine);
+	QPen greenPen(Qt::green, 2, Qt::SolidLine);
+
+	renew();
+
+	QPainter painter(this);
+	painter.save();
+	painter.setRenderHint(QPainter::Antialiasing);
+
+	setMatrix(painter);
+	drawAxis(painter);
+	painter.restore();
+	drawAxisXName(painter);
+	painter.setRenderHint(QPainter::Antialiasing);
+	setMatrix(painter);
+	markTimeAxis(painter);
+
+	// Paint OX readings
+	drawDiagram(painter, pointsX, redPen);
+	// Paint OY readings
+	drawDiagram(painter, pointsY, bluePen);
+	// Paint OZ readings
+	drawDiagram(painter, pointsZ, greenPen);
+}
+
+void VectorSensorWidget::exit()
+{
+	mTimer.stop();
+	TrikGuiDialog::exit();
 }
 
 void VectorSensorWidget::renewFocus()
 {
-	setFocus();
+	this->setFocus();
 }
+
+void VectorSensorWidget::setMatrix(QPainter &painter)
+{
+	const qreal x0 = static_cast<qreal>(axisMargin);
+	const qreal y0 = height() / 2;
+
+	QMatrix m;
+	m.translate(x0, y0);
+	// Scale to flip y axis
+	m.scale(1.0, -1.0);
+
+	painter.setMatrix(m);
+}
+
+void VectorSensorWidget::drawAxis(QPainter &painter)
+{
+	QPen blackPen(Qt::black, 2, Qt::SolidLine);
+	painter.setPen(blackPen);
+	//Draw x axis
+	painter.drawLine(0 - axisMargin, 0, width() - 2 * axisMargin, 0);
+	// Draw y axis
+	painter.drawLine(0, 0 - (height() / 2), 0, height() / 2);
+	// Draw direction arrows
+	painter.setBrush(Qt::black);
+	QPolygonF xArrow;
+	xArrow << QPointF(width() - (2 * axisMargin), 0)
+		  << QPointF(width() - (3 * axisMargin), axisMargin / 2)
+		  << QPointF(width() - (3 * axisMargin), 0 - (axisMargin / 2));
+	painter.drawPolygon(xArrow);
+
+	QPolygonF yArrow;
+	yArrow << QPointF(0, height() / 2)
+		  << QPointF(axisMargin / 2, height() / 2 - axisMargin)
+		  << QPointF(0 - (axisMargin / 2), height() / 2 - axisMargin);
+	painter.drawPolygon(yArrow);
+}
+
+void VectorSensorWidget::drawAxisXName(QPainter &painter)
+{
+	const QString name = "time, sec";
+	QPointF position(width() - 4 * axisMargin, height() / 2 + 4 * axisMargin);
+	const int boundingRectSize = 100;
+	QRect rect = QRect(position.x() - boundingRectSize / 2
+		, position.y() - boundingRectSize / 2
+		, boundingRectSize, boundingRectSize);
+	QFont font = QFont("times");
+	font.setPixelSize(10);
+	painter.setFont(font);
+	painter.drawText(rect, Qt::AlignCenter, name);
+}
+
+void VectorSensorWidget::drawDiagram(QPainter &painter, QVector<QPointF> points, QPen pen)
+{
+	painter.setPen(pen);
+	int i = 0;
+	for (i = 0; i < points.size() - 1; i++)
+	{
+		painter.drawLine(points[i], points[i + 1]);
+	}
+}
+
+void VectorSensorWidget::renew()
+{
+	int randomNumberX = qrand() % height() - (height() / 2);
+	int randomNumberY = qrand() % height() - (height() / 2);
+	int randomNumberZ = qrand() % height() - (height() / 2);
+	QPointF newPointX = QPointF(xCoordinate(), randomNumberX);
+	QPointF newPointY = QPointF(xCoordinate(), randomNumberY);
+	QPointF newPointZ = QPointF(xCoordinate(), randomNumberZ);
+
+	updateReadings(pointsX, newPointX);
+	updateReadings(pointsY, newPointY);
+	updateReadings(pointsZ, newPointZ);
+
+	if (mTime <= maxTime)
+		mTime++;
+}
+
+void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF newPoint)
+{
+	if (mTime > maxTime)
+	{
+		for (int i = 0; i < points.size() - 1; i++)
+		{
+			points[i].setY(points[i + 1].y());
+		}
+		points[points.size() - 1] = newPoint;
+	}
+	else
+	{
+		points.append(newPoint);
+	}
+}
+
+void VectorSensorWidget::markTimeAxis(QPainter &painter)
+{
+	painter.save();
+	// flip y axis back
+	painter.scale(1, -1);
+	const int pixelSize = 5;
+	const int margin = 3;
+	QFont font = QFont("times");
+	font.setPixelSize(pixelSize);
+
+	qreal time = 0;
+	const qreal timeShift = 0.5;
+	QPointF textPosition = QPointF(0, 0 + 2 * margin);
+	for (int i = 0; i < maxTime; i++)
+	{
+		painter.drawLine(textPosition.x(), margin, textPosition.x(), 0 - margin);
+		const int size = 100;
+		QRect rect = QRect(textPosition.x() - size / 2, textPosition.y() - size / 2, size, size);
+		painter.drawText(rect, Qt::AlignCenter, QString::number(time));
+		textPosition.setX(textPosition.x() + (width() - 2 * axisMargin) / maxTime);
+		time = time + timeShift;
+	}
+	painter.restore();
+}
+
+qreal VectorSensorWidget::xCoordinate()
+{
+	if (mTime >= maxTime)
+	{
+		return width() - (2 * axisMargin);
+	}
+	return (width() - 2 * axisMargin) / maxTime * mTime;
+}
+
+//void VectorSensorWidget::generateRandomNumbers()
+//{
+//	const int maxValue = 5000;
+//	for (int i = 0; i < mValues.size(); i++)
+//	{
+//		mValues[i] = rand() % maxValue;
+//	}
+//}

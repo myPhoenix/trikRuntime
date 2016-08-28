@@ -12,8 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. */
 
-#ifndef VECTORSENSORWIDGET_H
-#define VECTORSENSORWIDGET_H
+#pragma once
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 	#include <QtGui/QWidget>
@@ -25,9 +24,13 @@
 	#include <QtWidgets/QLabel>
 #endif
 
-#include <QtCore/QTimer>
-#include <QtCore/QVector>
+#include <QTWidgets>
+#include <QVector>
+#include <QTimer>
+#include <QPen>
+#include <QtGlobal>
 
+#include <trikControl/vectorSensorInterface.h>
 #include "trikGuiDialog.h"
 
 namespace trikControl {
@@ -43,25 +46,39 @@ class VectorSensorWidget : public TrikGuiDialog
 
 public:
 	/// Constructor.
-	VectorSensorWidget(trikControl::BrickInterface &brick, QWidget *parent = 0);
+	VectorSensorWidget(trikControl::BrickInterface &brick
+	, trikControl::VectorSensorInterface &sensor
+	, QWidget *parent = 0);
 
-public slots:
-	void renew();
+	/// String that shall appear in menu for this widget.
+	static QString menuEntry(trikControl::VectorSensorInterface::Type type);
 
 protected:
-	void renewFocus() override;
+	void paintEvent(QPaintEvent *);
+	void exit();
+	void renewFocus();
 
 private:
-	void generateRandomNumbers();
+	void delay(int millisecondsToWait);
+	void renew();
+	void drawDiagram(QPainter &painter, QVector<QPointF> points, QPen pen);
+	void drawAxis(QPainter &painter);
+	void drawAxisXName(QPainter & painter);
+	void setMatrix(QPainter &painter);
+	void updateReadings(QVector<QPointF> &points, QPointF newPoint);
+	void markTimeAxis(QPainter &painter);
+	qreal xCoordinate();
 
 	trikControl::BrickInterface &mBrick;
-	QVBoxLayout mLayout;
-	QVector<QLabel *> mValueLabels;
-	QVector<int> mValues;
+	trikControl::VectorSensorInterface &mSensor;
 	const int mInterval;
 	QTimer mTimer;
+	int mTime;
+	const int maxTime;
+	const int axisMargin;
+	QVector<QPointF> pointsX;
+	QVector<QPointF> pointsY;
+	QVector<QPointF> pointsZ;
 };
 
 }
-
-#endif // ACCELEROMETERWIDGET_H

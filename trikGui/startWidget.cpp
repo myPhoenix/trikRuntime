@@ -42,6 +42,7 @@ using namespace trikGui;
 
 using trikControl::MotorInterface;
 using trikControl::SensorInterface;
+using trikControl::VectorSensorInterface;
 
 StartWidget::StartWidget(Controller &controller, QWidget *parent)
 	: MainWidget(parent)
@@ -64,8 +65,9 @@ StartWidget::StartWidget(Controller &controller, QWidget *parent)
 
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::servoMotor)));
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::powerMotor)));
-	testingItem->appendRow(new QStandardItem(tr("Gyroscope")));
-	testingItem->appendRow(new QStandardItem(tr("Accelerometer")));
+
+	testingItem->appendRow(new QStandardItem(VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)));
+	testingItem->appendRow(new QStandardItem(VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)));
 
 	testingItem->appendRow(new QStandardItem(
 			SensorsSelectionWidget::menuEntry(SensorsSelectionWidget::SensorType::digitalSensor)));
@@ -190,10 +192,15 @@ void StartWidget::launch()
 			LanguageSelectionWidget languageSelectionWidget;
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
-		} else if (currentItemText == "Accelerometer") {
-			VectorSensorWidget accelerometerWidget(mController.brick());
-			emit newWidget(accelerometerWidget);
-			accelerometerWidget.exec();
+		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)) {
+			VectorSensorWidget vectorSensorWidget(mController.brick(), *mController.brick().accelerometer());
+			emit newWidget(vectorSensorWidget);
+			vectorSensorWidget.exec();
+		}
+		else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)) {
+			VectorSensorWidget vectorSensorWidget(mController.brick(), *mController.brick().gyroscope());
+			emit newWidget(vectorSensorWidget);
+			vectorSensorWidget.exec();
 		}
 
 		if (result == TrikGuiDialog::goHomeExit) {
