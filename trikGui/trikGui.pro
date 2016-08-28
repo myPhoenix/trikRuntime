@@ -49,7 +49,7 @@ HEADERS += \
 	$$PWD/wiFiModeWidget.h \
 	$$PWD/wiFiIndicator.h \
 	$$PWD/openSocketIndicator.h \
-	$$PWD/accelerometerWidget.h \
+	$$PWD/vectorSensorWidget.h \
 	$$PWD/commandSettingsWidget.h \
 	$$PWD/commandsListWidget.h \
 	$$PWD/programmingWidget.h \
@@ -92,7 +92,7 @@ SOURCES += \
 	$$PWD/wiFiModeWidget.cpp \
 	$$PWD/wiFiIndicator.cpp \
 	$$PWD/openSocketIndicator.cpp \
-	$$PWD/accelerometerWidget.cpp \
+	$$PWD/vectorSensorWidget.cpp \
 	$$PWD/commandSettingsWidget.cpp \
 	$$PWD/commandsListWidget.cpp \
 	$$PWD/programmingWidget.cpp \

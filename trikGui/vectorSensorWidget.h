@@ -12,8 +12,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License. */
 
-#ifndef ACCELEROMETERWIDGET_H
-#define ACCELEROMETERWIDGET_H
+#ifndef VECTORSENSORWIDGET_H
+#define VECTORSENSORWIDGET_H
 
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
 	#include <QtGui/QWidget>
@@ -37,13 +37,13 @@ class VectorSensorInterface;
 
 namespace trikGui {
 
-class AccelerometerWidget : public TrikGuiDialog
+class VectorSensorWidget : public TrikGuiDialog
 {
 	Q_OBJECT
 
 public:
 	/// Constructor.
-	AccelerometerWidget(trikControl::BrickInterface &brick, QWidget *parent = 0);
+	VectorSensorWidget(trikControl::BrickInterface &brick, QWidget *parent = 0);
 
 public slots:
 	void renew();

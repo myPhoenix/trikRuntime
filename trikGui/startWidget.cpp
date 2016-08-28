@@ -35,7 +35,7 @@
 #include "informationWidget.h"
 #include "systemSettingsWidget.h"
 #include "languageSelectionWidget.h"
-#include "accelerometerWidget.h"
+#include "vectorSensorWidget.h"
 #include "programmingWidget.h"
 
 using namespace trikGui;
@@ -191,7 +191,7 @@ void StartWidget::launch()
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
 		} else if (currentItemText == "Accelerometer") {
-			AccelerometerWidget accelerometerWidget(mController.brick());
+			VectorSensorWidget accelerometerWidget(mController.brick());
 			emit newWidget(accelerometerWidget);
 			accelerometerWidget.exec();
 		}

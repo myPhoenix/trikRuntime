@@ -19,7 +19,7 @@
 
 using namespace trikGui;
 
-AccelerometerWidget::AccelerometerWidget(trikControl::BrickInterface &brick
+VectorSensorWidget::VectorSensorWidget(trikControl::BrickInterface &brick
 		, QWidget *parent)
 	: TrikGuiDialog(parent)
 	, mBrick(brick)
@@ -43,7 +43,7 @@ AccelerometerWidget::AccelerometerWidget(trikControl::BrickInterface &brick
 	mTimer.start();
 }
 
-void AccelerometerWidget::renew()
+void VectorSensorWidget::renew()
 {
 	generateRandomNumbers();
 	for (int i = 0; i < mValueLabels.size(); i++)
@@ -52,7 +52,7 @@ void AccelerometerWidget::renew()
 	}
 }
 
-void AccelerometerWidget::generateRandomNumbers()
+void VectorSensorWidget::generateRandomNumbers()
 {
 	const int maxValue = 5000;
 	for (int i = 0; i < mValues.size(); i++)
@@ -61,7 +61,7 @@ void AccelerometerWidget::generateRandomNumbers()
 	}
 }
 
-void AccelerometerWidget::renewFocus()
+void VectorSensorWidget::renewFocus()
 {
 	setFocus();
 }
