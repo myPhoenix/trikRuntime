@@ -53,6 +53,9 @@ public:
 	/// String that shall appear in menu for this widget.
 	static QString menuEntry(trikControl::VectorSensorInterface::Type type);
 
+public slots:
+	void renew();
+
 protected:
 	void paintEvent(QPaintEvent *);
 	void exit();
@@ -60,7 +63,6 @@ protected:
 
 private:
 	void delay(int millisecondsToWait);
-	void renew();
 	void drawDiagram(QPainter &painter, QVector<QPointF> points, QPen pen);
 	void drawAxis(QPainter &painter);
 	void drawAxisXName(QPainter & painter);
@@ -68,6 +70,7 @@ private:
 	void updateReadings(QVector<QPointF> &points, QPointF newPoint);
 	void markTimeAxis(QPainter &painter);
 	qreal xCoordinate();
+	qreal yCoordinate(int value);
 
 	trikControl::BrickInterface &mBrick;
 	trikControl::VectorSensorInterface &mSensor;
@@ -76,6 +79,8 @@ private:
 	int mTime;
 	const int maxTime;
 	const int axisMargin;
+	const int maxValue;
+	QVector<int> mData;
 	QVector<QPointF> pointsX;
 	QVector<QPointF> pointsY;
 	QVector<QPointF> pointsZ;

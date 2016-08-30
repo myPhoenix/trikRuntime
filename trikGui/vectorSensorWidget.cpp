@@ -15,6 +15,7 @@
 #include "vectorSensorWidget.h"
 
 #include <trikControl/brickInterface.h>
+#include <trikControl/vectorSensorInterface.h>
 #include <QTime>
 
 using namespace trikGui;
@@ -29,14 +30,13 @@ VectorSensorWidget::VectorSensorWidget(trikControl::BrickInterface &brick
 	, mTime(0)
 	, maxTime(10)
 	, axisMargin(5)
+	, maxValue(6000)
 {
-	//this->setFixedSize(width(), height());
-
-	QTime now = QTime::currentTime();
-	qsrand(now.msec());
+	mData << 0 << 0 << 0;
 
 	mTimer.setInterval(mInterval);
 	connect(&mTimer, SIGNAL(timeout()), this, SLOT(update()));
+	connect(&mSensor, SIGNAL(newData(QVector<int>, trikKernel::TimeVal)), this, SLOT(renew()));
 
 	mTimer.start();
 }
@@ -62,7 +62,14 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	QPen redPen(Qt::red, 2, Qt::SolidLine);
 	QPen greenPen(Qt::green, 2, Qt::SolidLine);
 
-	renew();
+	updateReadings(pointsX, QPointF(xCoordinate(), yCoordinate(mData[0])));
+	updateReadings(pointsY, QPointF(xCoordinate(), yCoordinate(mData[1])));
+	updateReadings(pointsZ, QPointF(xCoordinate(), yCoordinate(mData[2])));
+
+	if (mTime <= maxTime)
+	{
+		mTime++;
+	}
 
 	QPainter painter(this);
 	painter.save();
@@ -78,8 +85,10 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 
 	// Paint OX readings
 	drawDiagram(painter, pointsX, redPen);
+
 	// Paint OY readings
 	drawDiagram(painter, pointsY, bluePen);
+
 	// Paint OZ readings
 	drawDiagram(painter, pointsZ, greenPen);
 }
@@ -102,6 +111,7 @@ void VectorSensorWidget::setMatrix(QPainter &painter)
 
 	QMatrix m;
 	m.translate(x0, y0);
+
 	// Scale to flip y axis
 	m.scale(1.0, -1.0);
 
@@ -112,10 +122,13 @@ void VectorSensorWidget::drawAxis(QPainter &painter)
 {
 	QPen blackPen(Qt::black, 2, Qt::SolidLine);
 	painter.setPen(blackPen);
-	//Draw x axis
+
+	// Draw x axis
 	painter.drawLine(0 - axisMargin, 0, width() - 2 * axisMargin, 0);
+
 	// Draw y axis
 	painter.drawLine(0, 0 - (height() / 2), 0, height() / 2);
+
 	// Draw direction arrows
 	painter.setBrush(Qt::black);
 	QPolygonF xArrow;
@@ -157,19 +170,11 @@ void VectorSensorWidget::drawDiagram(QPainter &painter, QVector<QPointF> points,
 
 void VectorSensorWidget::renew()
 {
-	int randomNumberX = qrand() % height() - (height() / 2);
-	int randomNumberY = qrand() % height() - (height() / 2);
-	int randomNumberZ = qrand() % height() - (height() / 2);
-	QPointF newPointX = QPointF(xCoordinate(), randomNumberX);
-	QPointF newPointY = QPointF(xCoordinate(), randomNumberY);
-	QPointF newPointZ = QPointF(xCoordinate(), randomNumberZ);
-
-	updateReadings(pointsX, newPointX);
-	updateReadings(pointsY, newPointY);
-	updateReadings(pointsZ, newPointZ);
-
-	if (mTime <= maxTime)
-		mTime++;
+	const int dimensions = 3;
+	for (int i = 0; i < dimensions; i++)
+	{
+		mData[i] = mSensor.read()[i];
+	}
 }
 
 void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF newPoint)
@@ -191,6 +196,7 @@ void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF newPoi
 void VectorSensorWidget::markTimeAxis(QPainter &painter)
 {
 	painter.save();
+
 	// flip y axis back
 	painter.scale(1, -1);
 	const int pixelSize = 5;
@@ -222,11 +228,20 @@ qreal VectorSensorWidget::xCoordinate()
 	return (width() - 2 * axisMargin) / maxTime * mTime;
 }
 
-//void VectorSensorWidget::generateRandomNumbers()
-//{
-//	const int maxValue = 5000;
-//	for (int i = 0; i < mValues.size(); i++)
-//	{
-//		mValues[i] = rand() % maxValue;
-//	}
-//}
+qreal VectorSensorWidget::yCoordinate(int value)
+{
+	if (value > maxValue)
+	{
+		return (height() / 2);
+	}
+	else if (value < 0 - maxValue)
+	{
+		return (0.0 - (height() / 2));
+	}
+	else
+	{
+		const qreal realValue = static_cast<qreal>(value);
+		const qreal y = realValue / maxValue * (height() / 2);
+		return y;
+	}
+}
