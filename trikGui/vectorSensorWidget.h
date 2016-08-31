@@ -62,7 +62,6 @@ protected:
 	void renewFocus();
 
 private:
-	void delay(int millisecondsToWait);
 	void drawDiagram(QPainter &painter, QVector<QPointF> points, QPen pen);
 	void drawAxis(QPainter &painter);
 	void drawAxisXName(QPainter & painter);

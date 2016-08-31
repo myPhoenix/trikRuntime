@@ -37,8 +37,6 @@ VectorSensorWidget::VectorSensorWidget(trikControl::BrickInterface &brick
 	mTimer.setInterval(mInterval);
 	connect(&mTimer, SIGNAL(timeout()), this, SLOT(update()));
 	connect(&mSensor, SIGNAL(newData(QVector<int>, trikKernel::TimeVal)), this, SLOT(renew()));
-
-	mTimer.start();
 }
 
 
@@ -91,6 +89,12 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 
 	// Paint OZ readings
 	drawDiagram(painter, pointsZ, greenPen);
+}
+
+int VectorSensorWidget::exec()
+{
+	mTimer.start();
+	TrikGuiDialog::exec();
 }
 
 void VectorSensorWidget::exit()
