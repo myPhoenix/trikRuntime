@@ -193,12 +193,11 @@ void StartWidget::launch()
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
 		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)) {
-			VectorSensorWidget vectorSensorWidget(mController.brick(), *mController.brick().accelerometer());
+			VectorSensorWidget vectorSensorWidget(*mController.brick().accelerometer());
 			emit newWidget(vectorSensorWidget);
 			vectorSensorWidget.exec();
-		}
-		else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)) {
-			VectorSensorWidget vectorSensorWidget(mController.brick(), *mController.brick().gyroscope());
+		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)) {
+			VectorSensorWidget vectorSensorWidget(*mController.brick().gyroscope());
 			emit newWidget(vectorSensorWidget);
 			vectorSensorWidget.exec();
 		}

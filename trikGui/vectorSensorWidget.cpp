@@ -1,36 +1,15 @@
-/* Copyright 2016 QReal Research Group
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License. */
-
 #include "vectorSensorWidget.h"
 
 #include <trikControl/brickInterface.h>
 #include <trikControl/vectorSensorInterface.h>
-#include <QTime>
 
 using namespace trikGui;
 
-VectorSensorWidget::VectorSensorWidget(trikControl::BrickInterface &brick
-	, trikControl::VectorSensorInterface &sensor
+VectorSensorWidget::VectorSensorWidget(trikControl::VectorSensorInterface &sensor
 	, QWidget *parent)
 	: TrikGuiDialog(parent)
-	, mBrick(brick)
 	, mSensor(sensor)
-	, mInterval(500)
 	, mTime(0)
-	, maxTime(10)
-	, axisMargin(5)
-	, maxValue(6000)
 {
 	mData << 0 << 0 << 0;
 
@@ -56,13 +35,17 @@ QString VectorSensorWidget::menuEntry(trikControl::VectorSensorInterface::Type t
 
 void VectorSensorWidget::paintEvent(QPaintEvent *)
 {
-	QPen bluePen(Qt::blue, 2, Qt::SolidLine);
-	QPen redPen(Qt::red, 2, Qt::SolidLine);
-	QPen greenPen(Qt::green, 2, Qt::SolidLine);
+	const QPen bluePen(Qt::blue, 2, Qt::SolidLine);
+	const QPen redPen(Qt::red, 2, Qt::SolidLine);
+	const QPen greenPen(Qt::green, 2, Qt::SolidLine);
 
-	updateReadings(pointsX, QPointF(xCoordinate(), yCoordinate(mData[0])));
-	updateReadings(pointsY, QPointF(xCoordinate(), yCoordinate(mData[1])));
-	updateReadings(pointsZ, QPointF(xCoordinate(), yCoordinate(mData[2])));
+	QPointF newPointX(xCoordinate(), yCoordinate(mData[0]));
+	QPointF newPointY(xCoordinate(), yCoordinate(mData[1]));
+	QPointF newPointZ(xCoordinate(), yCoordinate(mData[2]));
+
+	updateReadings(pointsX, newPointX);
+	updateReadings(pointsY, newPointY);
+	updateReadings(pointsZ, newPointZ);
 
 	if (mTime <= maxTime)
 	{
@@ -82,19 +65,19 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	markTimeAxis(painter);
 
 	// Paint OX readings
-	drawDiagram(painter, pointsX, redPen);
+	drawChart(painter, pointsX, redPen);
 
 	// Paint OY readings
-	drawDiagram(painter, pointsY, bluePen);
+	drawChart(painter, pointsY, bluePen);
 
 	// Paint OZ readings
-	drawDiagram(painter, pointsZ, greenPen);
+	drawChart(painter, pointsZ, greenPen);
 }
 
 int VectorSensorWidget::exec()
 {
 	mTimer.start();
-	TrikGuiDialog::exec();
+	return TrikGuiDialog::exec();
 }
 
 void VectorSensorWidget::exit()
@@ -124,7 +107,7 @@ void VectorSensorWidget::setMatrix(QPainter &painter)
 
 void VectorSensorWidget::drawAxis(QPainter &painter)
 {
-	QPen blackPen(Qt::black, 2, Qt::SolidLine);
+	const QPen blackPen(Qt::black, 2, Qt::SolidLine);
 	painter.setPen(blackPen);
 
 	// Draw x axis
@@ -151,7 +134,7 @@ void VectorSensorWidget::drawAxis(QPainter &painter)
 void VectorSensorWidget::drawAxisXName(QPainter &painter)
 {
 	const QString name = "time, sec";
-	QPointF position(width() - 4 * axisMargin, height() / 2 + 4 * axisMargin);
+	const QPointF position(width() - 5 * axisMargin, height() / 2 + 4 * axisMargin);
 	const int boundingRectSize = 100;
 	QRect rect = QRect(position.x() - boundingRectSize / 2
 		, position.y() - boundingRectSize / 2
@@ -162,12 +145,11 @@ void VectorSensorWidget::drawAxisXName(QPainter &painter)
 	painter.drawText(rect, Qt::AlignCenter, name);
 }
 
-void VectorSensorWidget::drawDiagram(QPainter &painter, QVector<QPointF> points, QPen pen)
+void VectorSensorWidget::drawChart(QPainter &painter, QVector<QPointF> &points, const QPen &pen)
 {
 	painter.setPen(pen);
 	int i = 0;
-	for (i = 0; i < points.size() - 1; i++)
-	{
+	for (i = 0; i < points.size() - 1; i++) {
 		painter.drawLine(points[i], points[i + 1]);
 	}
 }
@@ -175,24 +157,20 @@ void VectorSensorWidget::drawDiagram(QPainter &painter, QVector<QPointF> points,
 void VectorSensorWidget::renew()
 {
 	const int dimensions = 3;
-	for (int i = 0; i < dimensions; i++)
-	{
+	for (int i = 0; i < dimensions; i++) {
 		mData[i] = mSensor.read()[i];
 	}
 }
 
-void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF newPoint)
+void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF &newPoint)
 {
-	if (mTime > maxTime)
-	{
+	if (mTime > maxTime) {
 		for (int i = 0; i < points.size() - 1; i++)
 		{
 			points[i].setY(points[i + 1].y());
 		}
 		points[points.size() - 1] = newPoint;
-	}
-	else
-	{
+	} else {
 		points.append(newPoint);
 	}
 }
@@ -220,30 +198,26 @@ void VectorSensorWidget::markTimeAxis(QPainter &painter)
 		textPosition.setX(textPosition.x() + (width() - 2 * axisMargin) / maxTime);
 		time = time + timeShift;
 	}
+
 	painter.restore();
 }
 
 qreal VectorSensorWidget::xCoordinate()
 {
-	if (mTime >= maxTime)
-	{
+	if (mTime >= maxTime) {
 		return width() - (2 * axisMargin);
 	}
+
 	return (width() - 2 * axisMargin) / maxTime * mTime;
 }
 
 qreal VectorSensorWidget::yCoordinate(int value)
 {
-	if (value > maxValue)
-	{
+	if (value > maxValue) {
 		return (height() / 2);
-	}
-	else if (value < 0 - maxValue)
-	{
+	} else if (value < 0 - maxValue) {
 		return (0.0 - (height() / 2));
-	}
-	else
-	{
+	} else {
 		const qreal realValue = static_cast<qreal>(value);
 		const qreal y = realValue / maxValue * (height() / 2);
 		return y;
