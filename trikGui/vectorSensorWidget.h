@@ -45,6 +45,7 @@ protected:
 	void exit() override;
 
 private:
+	void drawLegend(QPainter &painter);
 	void drawChart(QPainter &painter, QVector<QPointF> &points, const QPen &pen);
 	void drawAxis(QPainter &painter);
 	void drawAxisXName(QPainter &painter);

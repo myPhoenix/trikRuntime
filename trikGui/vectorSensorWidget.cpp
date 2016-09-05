@@ -55,6 +55,7 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	QPainter painter(this);
 	painter.save();
 	painter.setRenderHint(QPainter::Antialiasing);
+	drawLegend(painter);
 
 	setMatrix(painter);
 	drawAxis(painter);
@@ -84,6 +85,30 @@ void VectorSensorWidget::exit()
 {
 	mTimer.stop();
 	TrikGuiDialog::exit();
+}
+
+void VectorSensorWidget::drawLegend(QPainter &painter)
+{
+	const QPen bluePen(Qt::blue, 2, Qt::SolidLine);
+	const QPen redPen(Qt::red, 2, Qt::SolidLine);
+	const QPen greenPen(Qt::green, 2, Qt::SolidLine);
+
+	QFont font = QFont("times");
+	font.setPixelSize(7);
+	font.setCapitalization(QFont::AllUppercase);
+	font.setBold(QFont::Bold);
+	painter.setFont(font);
+
+	QRect rec(width() -  axisMargin, height() - 5 * axisMargin, axisMargin, 5 * axisMargin);
+	const QString x = "x";
+	const QString y = "y";
+	const QString z = "z";
+	painter.setPen(redPen);
+	painter.drawText(rec, Qt::AlignTop | Qt::AlignRight, x);
+	painter.setPen(bluePen);
+	painter.drawText(rec, Qt::AlignCenter | Qt:: AlignRight, y);
+	painter.setPen(greenPen);
+	painter.drawText(rec, Qt::AlignBottom | Qt:: AlignRight, z);
 }
 
 void VectorSensorWidget::renewFocus()
