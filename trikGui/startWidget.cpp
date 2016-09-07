@@ -35,12 +35,14 @@
 #include "informationWidget.h"
 #include "systemSettingsWidget.h"
 #include "languageSelectionWidget.h"
+#include "vectorSensorWidget.h"
 #include "programmingWidget.h"
 
 using namespace trikGui;
 
 using trikControl::MotorInterface;
 using trikControl::SensorInterface;
+using trikControl::VectorSensorInterface;
 
 StartWidget::StartWidget(Controller &controller, QWidget *parent)
 	: MainWidget(parent)
@@ -63,6 +65,9 @@ StartWidget::StartWidget(Controller &controller, QWidget *parent)
 
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::servoMotor)));
 	testingItem->appendRow(new QStandardItem(MotorsWidget::menuEntry(MotorInterface::Type::powerMotor)));
+
+	testingItem->appendRow(new QStandardItem(VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)));
+	testingItem->appendRow(new QStandardItem(VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)));
 
 	testingItem->appendRow(new QStandardItem(
 			SensorsSelectionWidget::menuEntry(SensorsSelectionWidget::SensorType::digitalSensor)));
@@ -187,6 +192,20 @@ void StartWidget::launch()
 			LanguageSelectionWidget languageSelectionWidget;
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
+		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)) {
+			const int maxValue = 6000;
+			VectorSensorWidget vectorSensorWidget(*mController.brick().accelerometer()
+					, VectorSensorInterface::Type::accelerometer
+					, maxValue);
+			emit newWidget(vectorSensorWidget);
+			result = vectorSensorWidget.exec();
+		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)) {
+			const int maxValue = 5000;
+			VectorSensorWidget vectorSensorWidget(*mController.brick().gyroscope()
+					, VectorSensorInterface::Type::gyroscope
+					, maxValue);
+			emit newWidget(vectorSensorWidget);
+			result = vectorSensorWidget.exec();
 		}
 
 		if (result == TrikGuiDialog::goHomeExit) {

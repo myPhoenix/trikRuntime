@@ -39,7 +39,6 @@ TrikGuiApplication::TrikGuiApplication(int &argc, char **argv)
 bool TrikGuiApplication::notify(QObject *receiver, QEvent *event)
 {
 	if (event->type() == QEvent::KeyPress) {
-		refreshWidgets();
 		if (static_cast<QKeyEvent *>(event)->key() == Qt::Key_PowerDown && !mPowerButtonPressedTimer.isActive()) {
 			mPowerButtonPressedTimer.start(3000);
 		}
