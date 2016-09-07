@@ -6,18 +6,22 @@
 using namespace trikGui;
 
 VectorSensorWidget::VectorSensorWidget(trikControl::VectorSensorInterface &sensor
-	, QWidget *parent)
-	: TrikGuiDialog(parent)
-	, mSensor(sensor)
-	, mTime(0)
+		, trikControl::VectorSensorInterface::Type type
+		, int maximum
+		, QWidget *parent)
+		: TrikGuiDialog(parent)
+		, mSensor(sensor)
+		, mType(type)
+		, maxValue(maximum)
+		, mTime(0)
 {
+	reserveMemory();
 	mData << 0 << 0 << 0;
 
 	mTimer.setInterval(mInterval);
 	connect(&mTimer, SIGNAL(timeout()), this, SLOT(update()));
 	connect(&mSensor, SIGNAL(newData(QVector<int>, trikKernel::TimeVal)), this, SLOT(renew()));
 }
-
 
 QString VectorSensorWidget::menuEntry(trikControl::VectorSensorInterface::Type type)
 {
@@ -39,6 +43,8 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	const QPen redPen(Qt::red, 2, Qt::SolidLine);
 	const QPen greenPen(Qt::green, 2, Qt::SolidLine);
 
+	updateData();
+
 	QPointF newPointX(xCoordinate(), yCoordinate(mData[0]));
 	QPointF newPointY(xCoordinate(), yCoordinate(mData[1]));
 	QPointF newPointZ(xCoordinate(), yCoordinate(mData[2]));
@@ -47,8 +53,7 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	updateReadings(pointsY, newPointY);
 	updateReadings(pointsZ, newPointZ);
 
-	if (mTime <= maxTime)
-	{
+	if (mTime <= maxTime) {
 		mTime++;
 	}
 
@@ -56,6 +61,7 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	painter.save();
 	painter.setRenderHint(QPainter::Antialiasing);
 	drawLegend(painter);
+	drawWidgetName(painter);
 
 	setMatrix(painter);
 	drawAxis(painter);
@@ -64,6 +70,7 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 	painter.setRenderHint(QPainter::Antialiasing);
 	setMatrix(painter);
 	markTimeAxis(painter);
+	markVerticalAxis(painter);
 
 	// Paint OX readings
 	drawChart(painter, pointsX, redPen);
@@ -73,6 +80,8 @@ void VectorSensorWidget::paintEvent(QPaintEvent *)
 
 	// Paint OZ readings
 	drawChart(painter, pointsZ, greenPen);
+
+	clearNewData();
 }
 
 int VectorSensorWidget::exec()
@@ -85,6 +94,24 @@ void VectorSensorWidget::exit()
 {
 	mTimer.stop();
 	TrikGuiDialog::exit();
+}
+
+void VectorSensorWidget::drawWidgetName(QPainter &painter)
+{
+	const QPen blackPen(Qt::black, 2, Qt::SolidLine);
+	QFont font = QFont("times");
+	font.setPixelSize(7);
+	painter.setFont(font);
+	painter.setPen(blackPen);
+	const QRect rec(0, 0, width(), height());
+	const QString accelerometerName = "accelerometer";
+	const QString gyroscopeName = "gyroscope";
+
+	if (mType == trikControl::VectorSensorInterface::Type::accelerometer) {
+		painter.drawText(rec, Qt::AlignTop | Qt::AlignHCenter, accelerometerName);
+	} else if (mType == trikControl::VectorSensorInterface::Type::gyroscope) {
+		painter.drawText(rec, Qt::AlignTop | Qt::AlignHCenter, gyroscopeName);
+	}
 }
 
 void VectorSensorWidget::drawLegend(QPainter &painter)
@@ -145,14 +172,14 @@ void VectorSensorWidget::drawAxis(QPainter &painter)
 	painter.setBrush(Qt::black);
 	QPolygonF xArrow;
 	xArrow << QPointF(width() - (2 * axisMargin), 0)
-		  << QPointF(width() - (3 * axisMargin), axisMargin / 2)
-		  << QPointF(width() - (3 * axisMargin), 0 - (axisMargin / 2));
+			<< QPointF(width() - (3 * axisMargin), axisMargin / 2)
+			<< QPointF(width() - (3 * axisMargin), 0 - (axisMargin / 2));
 	painter.drawPolygon(xArrow);
 
 	QPolygonF yArrow;
 	yArrow << QPointF(0, height() / 2)
-		  << QPointF(axisMargin / 2, height() / 2 - axisMargin)
-		  << QPointF(0 - (axisMargin / 2), height() / 2 - axisMargin);
+			<< QPointF(axisMargin / 2, height() / 2 - axisMargin)
+			<< QPointF(0 - (axisMargin / 2), height() / 2 - axisMargin);
 	painter.drawPolygon(yArrow);
 }
 
@@ -162,8 +189,8 @@ void VectorSensorWidget::drawAxisXName(QPainter &painter)
 	const QPointF position(width() - 5 * axisMargin, height() / 2 + 4 * axisMargin);
 	const int boundingRectSize = 100;
 	QRect rect = QRect(position.x() - boundingRectSize / 2
-		, position.y() - boundingRectSize / 2
-		, boundingRectSize, boundingRectSize);
+			, position.y() - boundingRectSize / 2
+			, boundingRectSize, boundingRectSize);
 	QFont font = QFont("times");
 	font.setPixelSize(10);
 	painter.setFont(font);
@@ -181,10 +208,9 @@ void VectorSensorWidget::drawChart(QPainter &painter, QVector<QPointF> &points, 
 
 void VectorSensorWidget::renew()
 {
-	const int dimensions = 3;
-	for (int i = 0; i < dimensions; i++) {
-		mData[i] = mSensor.read()[i];
-	}
+	newDataX.append(mSensor.read()[0]);
+	newDataY.append(mSensor.read()[1]);
+	newDataZ.append(mSensor.read()[2]);
 }
 
 void VectorSensorWidget::updateReadings(QVector<QPointF> &points, QPointF &newPoint)
@@ -225,6 +251,71 @@ void VectorSensorWidget::markTimeAxis(QPainter &painter)
 	}
 
 	painter.restore();
+}
+
+void VectorSensorWidget::markVerticalAxis(QPainter &painter)
+{
+	painter.save();
+
+	const int pixelSize = 7;
+	const int margin = 3;
+	QFont font = QFont("times");
+	font.setPixelSize(pixelSize);
+	painter.setFont(font);
+
+	painter.drawLine(0 - margin, height() / 4, margin, height() / 4);
+	painter.drawLine(0 - margin, 0 - height() / 4, margin, 0 - height() / 4);
+
+	// flip y axis back
+	painter.scale(1, -1);
+	const int size = 100;
+	QRect rect1 = QRect(5 * margin - size / 2, 0 - height() / 4 - size / 2, size, size);
+	painter.drawText(rect1, Qt::AlignCenter, QString::number(maxValue / 2));
+	QRect rect2 = QRect(5 * margin - size / 2, height() / 4 - size / 2, size, size);
+	painter.drawText(rect2, Qt::AlignCenter, QString::number(0 - maxValue / 2));
+
+	painter.restore();
+}
+
+void VectorSensorWidget::updateData()
+{
+	if (!newDataX.empty()) {
+		mData[0] = getAverage(newDataX);
+	}
+
+	if (!newDataX.empty()) {
+		mData[1] = getAverage(newDataY);
+	}
+
+	if (!newDataX.empty()) {
+		mData[2] = getAverage(newDataZ);
+	}
+}
+
+int VectorSensorWidget::getAverage(QList<int> &list)
+{
+	qlonglong sum = 0;
+	for (int i = 0; i < list.size(); i++) {
+		sum = sum + list[i];
+	}
+
+	int average = sum / list.size();
+	return average;
+}
+
+void VectorSensorWidget::reserveMemory()
+{
+	const int capacity = 500;
+	newDataX.reserve(capacity);
+	newDataY.reserve(capacity);
+	newDataZ.reserve(capacity);
+}
+
+void VectorSensorWidget::clearNewData()
+{
+	newDataX.clear();
+	newDataY.clear();
+	newDataZ.clear();
 }
 
 qreal VectorSensorWidget::xCoordinate()

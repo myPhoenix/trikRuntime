@@ -193,13 +193,19 @@ void StartWidget::launch()
 			emit newWidget(languageSelectionWidget);
 			result = languageSelectionWidget.exec();
 		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::accelerometer)) {
-			VectorSensorWidget vectorSensorWidget(*mController.brick().accelerometer());
+			const int maxValue = 6000;
+			VectorSensorWidget vectorSensorWidget(*mController.brick().accelerometer()
+					, VectorSensorInterface::Type::accelerometer
+					, maxValue);
 			emit newWidget(vectorSensorWidget);
-			vectorSensorWidget.exec();
+			result = vectorSensorWidget.exec();
 		} else if (currentItemText == VectorSensorWidget::menuEntry(VectorSensorInterface::Type::gyroscope)) {
-			VectorSensorWidget vectorSensorWidget(*mController.brick().gyroscope());
+			const int maxValue = 5000;
+			VectorSensorWidget vectorSensorWidget(*mController.brick().gyroscope()
+					, VectorSensorInterface::Type::gyroscope
+					, maxValue);
 			emit newWidget(vectorSensorWidget);
-			vectorSensorWidget.exec();
+			result = vectorSensorWidget.exec();
 		}
 
 		if (result == TrikGuiDialog::goHomeExit) {

@@ -9,6 +9,7 @@
 #include <QtGui/QPainter>
 #include <QtGui/QPen>
 #include <QtCore/QVector>
+#include <QtCore/QList>
 #include <QtCore/QTimer>
 
 #include <trikControl/vectorSensorInterface.h>
@@ -28,7 +29,9 @@ class VectorSensorWidget : public TrikGuiDialog
 public:
 	/// Constructor.
 	VectorSensorWidget(trikControl::VectorSensorInterface &sensor
-	, QWidget *parent = 0);
+			, trikControl::VectorSensorInterface::Type type
+			, int maximum
+			, QWidget *parent = 0);
 
 	/// String that shall appear in menu for this widget.
 	static QString menuEntry(trikControl::VectorSensorInterface::Type type);
@@ -45,6 +48,7 @@ protected:
 	void exit() override;
 
 private:
+	void drawWidgetName(QPainter &painter);
 	void drawLegend(QPainter &painter);
 	void drawChart(QPainter &painter, QVector<QPointF> &points, const QPen &pen);
 	void drawAxis(QPainter &painter);
@@ -52,20 +56,29 @@ private:
 	void setMatrix(QPainter &painter);
 	void updateReadings(QVector<QPointF> &points, QPointF &newPoint);
 	void markTimeAxis(QPainter &painter);
+	void markVerticalAxis(QPainter &painter);
+	void updateData();
+	int getAverage(QList<int> &list);
+	void reserveMemory();
+	void clearNewData();
 	qreal xCoordinate();
 	qreal yCoordinate(int value);
 
 	trikControl::VectorSensorInterface &mSensor;
+	trikControl::VectorSensorInterface::Type mType;
+	const int maxValue;
 	const int mInterval = 500;
 	QTimer mTimer;
 	int mTime;
 	const int maxTime = 10;
 	const int axisMargin = 5;
-	const int maxValue = 6000;
 	QVector<int> mData;
 	QVector<QPointF> pointsX;
 	QVector<QPointF> pointsY;
 	QVector<QPointF> pointsZ;
+	QList<int> newDataX;
+	QList<int> newDataY;
+	QList<int> newDataZ;
 };
 
 }
